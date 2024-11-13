@@ -1,0 +1,17 @@
+---
+- name: Configure PiKVM role
+  hosts: localhost
+  remote_user: root
+  roles:
+    - ol3d.pikvm
+
+  tasks:
+    - name: Check if kvmd binary exists
+      ansible.builtin.stat:
+        path: /usr/bin/kvmd
+      register: kvmd_binary
+
+    - name: Fail if kvmd binary is not found
+      ansible.builtin.fail:
+        msg: "PiKVM (kvmd) is not installed."
+      when: not kvmd_binary.stat.exists

@@ -1,0 +1,15 @@
+---
+- name: Filesystem ro
+  ansible.builtin.command:
+    cmd: /usr/bin/ro
+  notify:
+    - Reload Systemd
+
+- name: Reload Systemd
+  ansible.builtin.systemd:
+    name: null
+    daemon_reload: true
+
+- name: Reboot PiKVM
+  ansible.builtin.reboot:
+    reboot_timeout: 180

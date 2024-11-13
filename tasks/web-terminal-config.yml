@@ -1,0 +1,21 @@
+---
+- name: Web Terminal Config - Check current state of kvmd-webterm service
+  ansible.builtin.systemd:
+    name: kvmd-webterm
+  register: kvmd_web_terminal_status
+
+- name: Web Terminal Config - Configure terminal state
+  when: >
+    (kvmd_web_terminal_status.status.UnitFileState == 'disabled' and web_terminal.enabled | bool) or
+    (kvmd_web_terminal_status.status.UnitFileState == 'enabled' and not web_terminal.enabled | bool)
+  block:
+    - name: Web Terminal Config - Mount filesystem Read Write (rw)
+      ansible.builtin.import_tasks: shared/filesystem-mode.yml
+      vars:
+        fs_mode: rw
+
+    - name: Web Terminal Config - Manage web terminal
+      ansible.builtin.systemd:
+        name: kvmd-webterm
+        enabled: "{{ web_terminal.enabled }}"
+      notify: Reboot PiKVM

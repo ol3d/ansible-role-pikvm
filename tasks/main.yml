@@ -1,0 +1,53 @@
+---
+- name: Check if kvmd binary exists
+  ansible.builtin.stat:
+    path: /usr/bin/kvmd
+  register: kvmd_binary
+
+- name: Fail if kvmd binary is not found
+  ansible.builtin.fail:
+    msg: "PiKVM (kvmd) is not installed."
+  when: not kvmd_binary.stat.exists
+
+- name: Check and extract PiKVM OS version
+  ansible.builtin.shell:
+    cmd: set -o pipefail && pacman -Q | grep -oP 'kvmd-platform-(v[0-9]+|v4mini|v4plus)'
+  register: kvmd_platform_version_raw
+  changed_when: false
+  failed_when: kvmd_platform_version_raw.rc != 0
+
+- name: Define PiKVM OS version mapping
+  ansible.builtin.set_fact:
+    pikvm_version_map:
+      v0: "v0"
+      v1: "v1"
+      v2: "v2"
+      v3: "v3"
+      v4mini: "v4mini"
+      v4plus: "v4plus"
+
+- name: Set the mapped PiKVM OS version
+  ansible.builtin.set_fact:
+    pikvm_version_mapped: "{{ pikvm_version_map.get(kvmd_platform_version_raw.stdout | regex_replace('^kvmd-platform-', ''), 'unknown') }}"
+
+- name: Update all system packages
+  ansible.builtin.import_tasks: system-updates.yml
+
+- name: Configure PiKVM Physical Fan
+  ansible.builtin.import_tasks: fan-config.yml
+
+- name: Configure PiKVM Physical OLED Screen
+  ansible.builtin.import_tasks: oled-config.yml
+
+- name: Manage web terminal
+  ansible.builtin.import_tasks: web-terminal-config.yml
+
+- name: Configure EDID file
+  ansible.builtin.import_tasks: edid-config.yml
+  vars:
+    pikvm_version_mapped: "{{ pikvm_version_mapped | default('unknown') }}"
+
+- name: Force mount filesystem Read Write (ro)
+  ansible.builtin.import_tasks: shared/filesystem-mode.yml
+  vars:
+    fs_mode: ro

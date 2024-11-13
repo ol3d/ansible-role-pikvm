@@ -1,0 +1,40 @@
+---
+- name: System Updates - Check if pikvm-update command is available
+  ansible.builtin.stat:
+    path: /usr/bin/pikvm-update
+  register: pikvm_update_check
+  changed_when: false
+  failed_when: false
+
+- name: System Updates - Install pikvm-os-updater if pikvm-update is not available
+  when: not pikvm_update_check.stat.exists
+  block:
+    - name: System Updates - Mount filesystem Read Write (rw)
+      ansible.builtin.import_tasks: shared/filesystem-mode.yml
+      vars:
+        fs_mode: rw
+
+    - name: System Updates - Update pacman package database
+      community.general.pacman:
+        update_cache: true
+
+    - name: System Updates - Install pikvm-os-updater
+      community.general.pacman:
+        name: pikvm-os-updater
+        state: present
+
+- name: System Updates - Run pikvm-update to update PiKVM OS
+  ansible.builtin.command:
+    cmd: /usr/bin/pikvm-update
+  register: pikvm_update_result
+  changed_when: "'updated' in pikvm_update_result.stdout"
+  notify: Reboot PiKVM
+
+- name: System Updates - Flush handlers to initiate system reboot
+  ansible.builtin.meta: flush_handlers
+  when: "'Reboot required.' in pikvm_update_result.stdout"
+
+- name: System Updates - Output the result of pikvm-update
+  ansible.builtin.debug:
+    msg: "PiKVM update output: {{ pikvm_update_result.stdout }}"
+  when: (pikvm_os_update_output_logs | bool)

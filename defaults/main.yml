@@ -1,0 +1,13 @@
+---
+oled:
+  enabled: false
+  rotate: false
+  fahrenheit: false
+fan:
+  enabled: true
+web_terminal:
+  enabled: true
+pikvm_os_update_output_logs: true
+hdmi:
+  edid:
+    custom: null

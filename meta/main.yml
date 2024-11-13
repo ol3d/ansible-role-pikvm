@@ -1,0 +1,17 @@
+galaxy_info:
+  namespace: ol3d
+  role_name: pikvm
+  author: Adam Delo
+  description: Ansible role to configure an official PiKVM device running on top of a Raspberry Pi.
+  license: GPL-3.0
+
+  min_ansible_version: "2.15"
+
+  galaxy_tags:
+    - pikvm
+    - raspberrypi
+    - kvm
+    - automation
+    - pi
+
+dependencies: []

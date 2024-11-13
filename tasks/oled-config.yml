@@ -1,0 +1,124 @@
+---
+- name: OLED Config - Check current state of kvmd-oled service
+  ansible.builtin.systemd:
+    name: kvmd-oled
+  register: kvmd_oled_status
+
+- name: OLED Config - Check current state of kvmd-oled-reboot service
+  ansible.builtin.systemd:
+    name: kvmd-oled-reboot
+  register: kvmd_oled_reboot_status
+
+- name: OLED Config - Check current state of kvmd-oled-shutdown service
+  ansible.builtin.systemd:
+    name: kvmd-oled-shutdown
+  register: kvmd_oled_shutdown_status
+
+- name: OLED Config - Check filesystem change required for OLED services
+  ansible.builtin.set_fact:
+    oled_kvmd_change_required: "{{
+        (kvmd_oled_status.status.UnitFileState == 'disabled' and oled.enabled | bool) or
+        (kvmd_oled_status.status.UnitFileState == 'enabled' and not oled.enabled | bool) or
+        (kvmd_oled_reboot_status.status.UnitFileState == 'disabled' and oled.enabled | bool) or
+        (kvmd_oled_reboot_status.status.UnitFileState == 'enabled' and not oled.enabled | bool) or
+        (kvmd_oled_shutdown_status.status.UnitFileState == 'disabled' and oled.enabled | bool) or
+        (kvmd_oled_shutdown_status.status.UnitFileState == 'enabled' and not oled.enabled | bool)
+      }}"
+
+- name: OLED Config - Check if kvmd-oled override file exists
+  ansible.builtin.stat:
+    path: /etc/systemd/system/kvmd-oled.service.d/override.conf
+  register: oled_override_file
+  failed_when: false
+
+- name: OLED Config - Read the current content of the OLED override file
+  ansible.builtin.slurp:
+    src: /etc/systemd/system/kvmd-oled.service.d/override.conf
+  register: oled_override_file_content
+  when: oled_override_file.stat.exists
+
+- name: OLED Config - Set the current and desired OLED override content
+  ansible.builtin.set_fact:
+    current_oled_override: "{{ oled_override_file_content.content | b64decode | trim if oled_override_file.stat.exists else '' }}"
+    desired_oled_override: |
+      [Service]
+      ExecStart=
+      ExecStart=/usr/bin/kvmd-oled --clear-on-exit{{ rotate_option }}{{ fahrenheit_option }}
+  vars:
+    rotate_option: "{{ ' --height=32 --rotate=2' if oled.rotate | bool else '' }}"
+    fahrenheit_option: "{{ ' --fahrenheit' if oled.fahrenheit | bool else '' }}"
+
+- name: OLED Config - Set all relevant OLED configuration facts
+  ansible.builtin.set_fact:
+    current_oled_override_normalized: "{{ current_oled_override.replace('\n', ' ') | replace('\r', '') | trim }}"
+    desired_oled_override_normalized: "{{ desired_oled_override.replace('\n', ' ') | replace('\r', '') | trim }}"
+
+- name: OLED Config - Check if the current and desired OLED override configurations match
+  ansible.builtin.set_fact:
+    oled_override_change_required: >-
+      {{
+        oled.enabled and
+        ((oled.rotate | bool or oled.fahrenheit | bool) and
+        (current_oled_override_normalized != desired_oled_override_normalized))
+      }}
+
+- name: OLED Config - OLED override removal required
+  ansible.builtin.set_fact:
+    oled_override_removal_required: >-
+      {{
+        ((not oled.rotate | bool and not oled.fahrenheit | bool) or
+        (not oled.enabled | bool)) and
+        (oled_override_file.stat.exists | default(false))
+      }}
+
+- name: OLED Config - Configure OLED Screen
+  when: >
+    (oled_kvmd_change_required | bool) or
+    (oled_override_change_required | bool) or
+    (oled_override_removal_required | bool)
+  block:
+    - name: OLED Config - Mount filesystem Read Write (rw)
+      ansible.builtin.import_tasks: shared/filesystem-mode.yml
+      vars:
+        fs_mode: rw
+
+    - name: OLED Config - Manage OLED services
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        enabled: "{{ oled.enabled }}"
+      loop:
+        - kvmd-oled
+        - kvmd-oled-reboot
+        - kvmd-oled-shutdown
+      when: (oled_kvmd_change_required | bool)
+      notify: Reboot PiKVM
+
+    - name: OLED Config - Configure kvmd-oled service override
+      when: (oled_override_change_required | default(false))
+      notify: Reboot PiKVM
+      block:
+        - name: OLED Config - Ensure kvmd-oled override directory exists
+          ansible.builtin.file:
+            path: /etc/systemd/system/kvmd-oled.service.d
+            state: directory
+            mode: '0755'
+
+        - name: OLED Config - Configure kvmd-oled override
+          ansible.builtin.copy:
+            dest: /etc/systemd/system/kvmd-oled.service.d/override.conf
+            content: |
+              [Service]
+              ExecStart=
+              ExecStart=/usr/bin/kvmd-oled --clear-on-exit{{ rotate_option }}{{ fahrenheit_option }}
+            mode: "0640"
+          vars:
+            rotate_option: "{{ ' --height=32 --rotate=2' if oled.rotate | bool else '' }}"
+            fahrenheit_option: "{{ ' --fahrenheit' if oled.fahrenheit | bool else '' }}"
+          when: (oled.rotate | bool) or (oled.fahrenheit | bool)
+
+    - name: OLED Config - Remove kvmd-oled override file
+      when: (oled_override_removal_required | bool)
+      ansible.builtin.file:
+        path: /etc/systemd/system/kvmd-oled.service.d/override.conf
+        state: absent
+      notify: Reboot PiKVM

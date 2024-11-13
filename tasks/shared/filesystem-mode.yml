@@ -1,0 +1,23 @@
+- name: Filesystem Mode - Get filesystem mount information
+  ansible.builtin.set_fact:
+    root_mount: "{{ ansible_mounts | selectattr('mount', 'equalto', '/') | first }}"
+    boot_mount: "{{ ansible_mounts | selectattr('mount', 'equalto', '/boot') | first }}"
+
+- name: Filesystem Mode - Check current filesystem mode
+  ansible.builtin.set_fact:
+    current_root_fs_mode: "{{ 'rw' if 'rw' in root_mount.options else 'ro' }}"
+    current_boot_fs_mode: "{{ 'rw' if 'rw' in boot_mount.options else 'ro' }}"
+
+# TODO Modify task to contain changed_when check
+- name: Filesystem Mode - Set filesystem to desired mode
+  ansible.builtin.command:
+    cmd: "/usr/bin/{{ fs_mode }}"
+  when: current_root_fs_mode != fs_mode or current_boot_fs_mode != fs_mode
+  register: fs_change
+  notify: Filesystem ro
+
+- name: Filesystem Mode - Reload Systemd
+  ansible.builtin.systemd:
+    name: null
+    daemon_reload: true
+  when: fs_change.changed

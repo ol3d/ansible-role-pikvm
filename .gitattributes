@@ -1,0 +1,4 @@
+* text=auto eol=lf
+
+# Treat templates differently for syntax highlighting
+*.yaml.j2 linguist-language=YAML
