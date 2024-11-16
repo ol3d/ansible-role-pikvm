@@ -1,13 +1,11 @@
 ---
-- name: Check if kvmd binary exists
-  ansible.builtin.stat:
-    path: /usr/bin/kvmd
-  register: kvmd_binary
+- name: Validate System
+  ansible.builtin.import_tasks: validate/system-validate.yml
+  when: (validate.validators.system | bool)
 
-- name: Fail if kvmd binary is not found
-  ansible.builtin.fail:
-    msg: "PiKVM (kvmd) is not installed."
-  when: not kvmd_binary.stat.exists
+- name: Validate Prometheus
+  ansible.builtin.import_tasks: validate/prometheus-validate.yml
+  when: (validate.validators.prometheus | bool)
 
 - name: Check and extract PiKVM OS version
   ansible.builtin.shell:
@@ -46,6 +44,12 @@
   ansible.builtin.import_tasks: edid-config.yml
   vars:
     pikvm_version_mapped: "{{ pikvm_version_mapped | default('unknown') }}"
+
+- name: Configure KVMD Override
+  ansible.builtin.import_tasks: kvmd-override-config.yml
+  vars:
+    pikvm_version_mapped: "{{ pikvm_version_mapped | default('unknown') }}"
+  when: (kvmd_override.enabled | bool)
 
 - name: Force mount filesystem Read Write (ro)
   ansible.builtin.import_tasks: shared/filesystem-mode.yml

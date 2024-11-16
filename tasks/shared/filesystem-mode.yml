@@ -8,11 +8,11 @@
     current_root_fs_mode: "{{ 'rw' if 'rw' in root_mount.options else 'ro' }}"
     current_boot_fs_mode: "{{ 'rw' if 'rw' in boot_mount.options else 'ro' }}"
 
-# TODO Modify task to contain changed_when check
 - name: Filesystem Mode - Set filesystem to desired mode
   ansible.builtin.command:
     cmd: "/usr/bin/{{ fs_mode }}"
   when: current_root_fs_mode != fs_mode or current_boot_fs_mode != fs_mode
+  changed_when: true
   register: fs_change
   notify: Filesystem ro
 

@@ -1,0 +1,16 @@
+---
+- name: System Validate - Check if kvmd binary exists
+  ansible.builtin.stat:
+    path: /usr/bin/kvmd
+  register: kvmd_binary
+
+- name: System Validate - Output message based on kvmd binary presence
+  ansible.builtin.debug:
+    msg: >-
+      {{
+        'PiKVM (kvmd) system successfully validated.' if kvmd_binary.stat.exists
+        else 'PiKVM (kvmd) system unsuccessfully validated.'
+      }}
+  failed_when: >
+    (not kvmd_binary.stat.exists)
+    and (validate.fail_on_validate)
