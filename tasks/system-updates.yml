@@ -27,14 +27,14 @@
   ansible.builtin.command:
     cmd: /usr/bin/pikvm-update
   register: pikvm_update_result
-  changed_when: "'updated' in pikvm_update_result.stdout"
+  changed_when: "'Reboot required.' in pikvm_update_result.stdout"
   notify: Reboot PiKVM
-
-- name: System Updates - Flush handlers to initiate system reboot
-  ansible.builtin.meta: flush_handlers
-  when: "'Reboot required.' in pikvm_update_result.stdout"
 
 - name: System Updates - Output the result of pikvm-update
   ansible.builtin.debug:
     msg: "PiKVM update output: {{ pikvm_update_result.stdout }}"
   when: (pikvm_os_update_output_logs | bool)
+
+- name: System Updates - Flush handlers to initiate system reboot
+  ansible.builtin.meta: flush_handlers
+  when: "'Reboot required.' in pikvm_update_result.stdout"
