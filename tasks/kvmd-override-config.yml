@@ -1,0 +1,36 @@
+---
+- name: KVMD Override Config - Check if /etc/kvmd/override.yaml exists
+  ansible.builtin.stat:
+    path: /etc/kvmd/override.yaml
+  register: kvmd_override_file
+
+- name: KVMD Override Config - Read current contents of /etc/kvmd/override.yaml if it exists
+  ansible.builtin.slurp:
+    path: /etc/kvmd/override.yaml
+  when: kvmd_override_file.stat.exists
+  register: current_kvmd_override_file
+
+- name: KVMD Override Config - Render the kvmd override template content in memory and compare
+  ansible.builtin.set_fact:
+    kvmd_override_contents_change_required: >
+      {{
+        not kvmd_override_file.stat.exists or
+        (kvmd_override_file.stat.exists and
+        (current_kvmd_override_file.content | b64decode) != lookup('template', 'override.yaml.j2'))
+      }}
+
+- name: KVMD Override Config - Replace override file
+  when: kvmd_override_contents_change_required
+  block:
+    - name: KVMD Override Config - Mount filesystem Read Write (rw)
+      ansible.builtin.import_tasks: shared/filesystem-mode.yml
+      vars:
+        fs_mode: rw
+
+    - name: KVMD Override Config - Apply the kvmd override template
+      ansible.builtin.template:
+        src: override.yaml.j2
+        dest: /etc/kvmd/override.yaml
+        mode: "0644"
+      notify:
+        - Reboot PiKVM
