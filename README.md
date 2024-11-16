@@ -41,6 +41,12 @@ The following PiKVM version(s) are currently unsupported and may not work with t
 
 `hdmi.edid.custom` If set, a custom HDMI EDID value will override the PiKVM default. By default, the EDID value will be set based on the PiKVM OS version.
 
+`validate.validators.system` By setting this value to **true**, this role will validate the PiKVM required files and system packages before configuring anything. When using an official PiKVM OS provided by PiKVM, this should pass without issue, however, by setting this value to **true**, it ensures that any custom OS is able to be properly configured. By default this is set to **true**.
+
+`validate.validators.prometheus` By default PiKVM allows Prometheus scraping by exposing metrics on the `/api/export/prometheus/metrics` endpoint. By setting this value to **true**, this role will validate that the metrics endpoint is available and correctly configured. By default this is set to **true**.
+
+`validate.fail_on_validate` By setting this value to **true**, any validators that fail will stop the role from continuing execution. This is helpful to prevent unknown issues from occuring during role execution if a validator fails. By default this is set to **true**.
+
 ### Example Variable Usage
 
 ```yaml
@@ -72,6 +78,11 @@ hdmi:
       00000000000000000000000000000000
       00000000000000000000000000000000
       00000000000000000000000000000045
+validate:
+  validators:
+    system: true
+    prometheus: true
+  fail_on_validate: false
 ```
 
 ## Example Playbook

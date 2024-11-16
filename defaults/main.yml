@@ -11,3 +11,8 @@ pikvm_os_update_output_logs: true
 hdmi:
   edid:
     custom: null
+validate:
+  validators:
+    system: true
+    prometheus: true
+  fail_on_validate: false
