@@ -1,5 +1,5 @@
 kvmd:
-{% if not hdmi.passthrough.enabled and pikvm_version_mapped == "v4plus" %}
+{% if not hdmi.passthrough.enabled and pikvm_version == "v4plus" %}
     # HDMI Passthrough - Disable HDMI Passthrough on PiKVM v4plus
     streamer:
         forever: false

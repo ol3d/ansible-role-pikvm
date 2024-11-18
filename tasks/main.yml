@@ -43,12 +43,12 @@
 - name: Configure EDID file
   ansible.builtin.import_tasks: edid-config.yml
   vars:
-    pikvm_version_mapped: "{{ pikvm_version_mapped | default('unknown') }}"
+    pikvm_version: "{{ pikvm_version_mapped | default('unknown') }}"
 
 - name: Configure KVMD Override
   ansible.builtin.import_tasks: kvmd-override-config.yml
   vars:
-    pikvm_version_mapped: "{{ pikvm_version_mapped | default('unknown') }}"
+    pikvm_version: "{{ pikvm_version_mapped | default('unknown') }}"
   when: (kvmd_override.enabled | bool)
 
 - name: Force mount filesystem Read Write (ro)
