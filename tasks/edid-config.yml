@@ -13,7 +13,7 @@
   block:
     - name: EDID Config - Read the default EDID file
       ansible.builtin.slurp:
-        src: "/usr/share/kvmd/configs.default/kvmd/edid/{{ pikvm_version_mapped }}.hex"
+        src: "/usr/share/kvmd/configs.default/kvmd/edid/{{ pikvm_version }}.hex"
       register: default_edid
 
     - name: EDID Config - Set current EDID value to default
