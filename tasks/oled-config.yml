@@ -17,12 +17,12 @@
 - name: OLED Config - Check filesystem change required for OLED services
   ansible.builtin.set_fact:
     oled_kvmd_change_required: "{{
-        (kvmd_oled_status.status.UnitFileState == 'disabled' and oled.enabled | bool) or
-        (kvmd_oled_status.status.UnitFileState == 'enabled' and not oled.enabled | bool) or
-        (kvmd_oled_reboot_status.status.UnitFileState == 'disabled' and oled.enabled | bool) or
-        (kvmd_oled_reboot_status.status.UnitFileState == 'enabled' and not oled.enabled | bool) or
-        (kvmd_oled_shutdown_status.status.UnitFileState == 'disabled' and oled.enabled | bool) or
-        (kvmd_oled_shutdown_status.status.UnitFileState == 'enabled' and not oled.enabled | bool)
+        (kvmd_oled_status.status.UnitFileState == 'disabled' and oled_enabled | bool) or
+        (kvmd_oled_status.status.UnitFileState == 'enabled' and not oled_enabled | bool) or
+        (kvmd_oled_reboot_status.status.UnitFileState == 'disabled' and oled_enabled | bool) or
+        (kvmd_oled_reboot_status.status.UnitFileState == 'enabled' and not oled_enabled | bool) or
+        (kvmd_oled_shutdown_status.status.UnitFileState == 'disabled' and oled_enabled | bool) or
+        (kvmd_oled_shutdown_status.status.UnitFileState == 'enabled' and not oled_enabled | bool)
       }}"
 
 - name: OLED Config - Check if kvmd-oled override file exists
@@ -45,8 +45,8 @@
       ExecStart=
       ExecStart=/usr/bin/kvmd-oled --clear-on-exit{{ rotate_option }}{{ fahrenheit_option }}
   vars:
-    rotate_option: "{{ ' --height=32 --rotate=2' if oled.rotate | bool else '' }}"
-    fahrenheit_option: "{{ ' --fahrenheit' if oled.fahrenheit | bool else '' }}"
+    rotate_option: "{{ ' --height=32 --rotate=2' if oled_rotate | bool else '' }}"
+    fahrenheit_option: "{{ ' --fahrenheit' if oled_fahrenheit | bool else '' }}"
 
 - name: OLED Config - Set all relevant OLED configuration facts
   ansible.builtin.set_fact:
@@ -57,8 +57,8 @@
   ansible.builtin.set_fact:
     oled_override_change_required: >-
       {{
-        oled.enabled and
-        ((oled.rotate | bool or oled.fahrenheit | bool) and
+        oled_enabled and
+        ((oled_rotate | bool or oled_fahrenheit | bool) and
         (current_oled_override_normalized != desired_oled_override_normalized))
       }}
 
@@ -66,8 +66,8 @@
   ansible.builtin.set_fact:
     oled_override_removal_required: >-
       {{
-        ((not oled.rotate | bool and not oled.fahrenheit | bool) or
-        (not oled.enabled | bool)) and
+        ((not oled_rotate | bool and not oled_fahrenheit | bool) or
+        (not oled_enabled | bool)) and
         (oled_override_file.stat.exists | default(false))
       }}
 
@@ -85,7 +85,7 @@
     - name: OLED Config - Manage OLED services
       ansible.builtin.systemd:
         name: "{{ item }}"
-        enabled: "{{ oled.enabled }}"
+        enabled: "{{ oled_enabled }}"
       loop:
         - kvmd-oled
         - kvmd-oled-reboot
@@ -112,9 +112,9 @@
               ExecStart=/usr/bin/kvmd-oled --clear-on-exit{{ rotate_option }}{{ fahrenheit_option }}
             mode: "0640"
           vars:
-            rotate_option: "{{ ' --height=32 --rotate=2' if oled.rotate | bool else '' }}"
-            fahrenheit_option: "{{ ' --fahrenheit' if oled.fahrenheit | bool else '' }}"
-          when: (oled.rotate | bool) or (oled.fahrenheit | bool)
+            rotate_option: "{{ ' --height=32 --rotate=2' if oled_rotate | bool else '' }}"
+            fahrenheit_option: "{{ ' --fahrenheit' if oled_fahrenheit | bool else '' }}"
+          when: (oled_rotate | bool) or (oled_fahrenheit | bool)
 
     - name: OLED Config - Remove kvmd-oled override file
       when: (oled_override_removal_required | bool)

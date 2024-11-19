@@ -23,4 +23,4 @@
       }}
   failed_when: >
     (prometheus_check.status != 200)
-    and (validate.fail_on_validate)
+    and (validate_fail_on_error)
