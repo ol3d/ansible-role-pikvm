@@ -1,16 +1,16 @@
 kvmd:
-{% if not hdmi.passthrough.enabled and pikvm_version == "v4plus" %}
+{% if not hdmi_passthrough_enabled and pikvm_version == "v4plus" %}
     # HDMI Passthrough - Disable HDMI Passthrough on PiKVM v4plus
     streamer:
         forever: false
         cmd_remove:
             - "--v4p"
 {% endif %}
-{% if hid.mouse.jiggler.enabled %}
+{% if mouse_jiggler_enabled %}
     hid:
         jiggler:
             enabled: true
-{% if hid.mouse.jiggler.on_after_reboot %}
+{% if mouse_jiggler_on_after_reboot %}
             active: true
 {% endif %}
 {% endif %}

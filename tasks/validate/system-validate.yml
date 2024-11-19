@@ -13,4 +13,4 @@
       }}
   failed_when: >
     (not kvmd_binary.stat.exists)
-    and (validate.fail_on_validate)
+    and (validate_fail_on_error)

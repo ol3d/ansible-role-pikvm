@@ -1,11 +1,11 @@
 ---
 - name: Validate System
   ansible.builtin.import_tasks: validate/system-validate.yml
-  when: (validate.validators.system | bool)
+  when: (validate_system | bool)
 
 - name: Validate Prometheus
   ansible.builtin.import_tasks: validate/prometheus-validate.yml
-  when: (validate.validators.prometheus | bool)
+  when: (validate_prometheus | bool)
 
 - name: Check and extract PiKVM OS version
   ansible.builtin.shell:
@@ -49,7 +49,7 @@
   ansible.builtin.import_tasks: kvmd-override-config.yml
   vars:
     pikvm_version: "{{ pikvm_version_mapped | default('unknown') }}"
-  when: (kvmd_override.enabled | bool)
+  when: (kvmd_override_enabled | bool)
 
 - name: Force mount filesystem Read Write (ro)
   ansible.builtin.import_tasks: shared/filesystem-mode.yml
