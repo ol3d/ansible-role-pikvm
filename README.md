@@ -43,12 +43,6 @@ The following PiKVM version(s) are currently unsupported and may not work with t
 
 `hdmi_passthrough_enabled` This option is only available for PiKVM V4 Plus. By setting this value to **false**, the OUT2 port on the back side of the PiKVM V4 Plus will be disabled. By default this option is set to **true**. To enable this setting, `kvmd_override_enabled` must also be set to **true**.
 
-`validate_system` By setting this value to **true**, this role will validate the PiKVM required files and system packages before configuring anything. When using an official PiKVM OS provided by PiKVM, this should pass without issue, however, by setting this value to **true**, it ensures that any custom OS is able to be properly configured. By default this is set to **true**.
-
-`validate_prometheus` By default PiKVM allows Prometheus scraping by exposing metrics on the `/api/export/prometheus/metrics` endpoint. By setting this value to **true**, this role will validate that the metrics endpoint is available and correctly configured. By default this is set to **true**.
-
-`validatefail_on_error` By setting this value to **true**, any validators that fail will stop the role from continuing execution. This is helpful to prevent unknown issues from occuring during role execution if a validator fails. By default this is set to **true**.
-
 `mouse_jiggler_enabled` By setting this value to **true**, the virtual mouse jiggler will be available for use within the WebUI. By default this value is set to **false**. This setting does not turn ON the mouse jiggler, instead, it allows the user to activate it manually. To enable this setting, `kvmd_override_enabled` must also be set to **true**.
 
 `mouse_jiggler_on_after_reboot` By setting this value to **true**, the virtual mouse jiggler will become active after reboot. By default this value is set to **false**. This setting turns ON the mouse jiggler by default after reboot. If you wish to have manual control over the activation of this setting after reboot, do not set this value to true. `mouse_jiggler_enabled` must be set to **true** for this setting to be applied. To enable this setting, `kvmd_override_enabled` must also be set to **true**.
@@ -82,9 +76,6 @@ hdmi_edid: |
   00000000000000000000000000000000
   00000000000000000000000000000045
 hdmi_passthrough_enabled: false
-validate_system: true
-validate_prometheus: true
-validate_fail_on_error: false
 mouse_jiggler_enabled: true
 mouse_jiggler_on_after_reboot: false
 kvmd_override_enabled: true

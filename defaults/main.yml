@@ -7,9 +7,6 @@ web_terminal_enabled: true
 pikvm_os_update_output_logs: true
 hdmi_edid: null
 hdmi_passthrough_enabled: false
-validate_system: true
-validate_prometheus: true
-validate_fail_on_error: true
 mouse_jiggler_enabled: false
 mouse_jiggler_on_after_reboot: false
 kvmd_override_enabled: false

@@ -3,14 +3,34 @@
   ansible.builtin.stat:
     path: /usr/bin/kvmd
   register: kvmd_binary
+  failed_when: (not kvmd_binary.stat.exists)
 
-- name: System Validate - Output message based on kvmd binary presence
-  ansible.builtin.debug:
-    msg: >-
-      {{
-        'PiKVM (kvmd) system successfully validated.' if kvmd_binary.stat.exists
-        else 'PiKVM (kvmd) system unsuccessfully validated.'
-      }}
-  failed_when: >
-    (not kvmd_binary.stat.exists)
-    and (validate_fail_on_error)
+- name: System Validate - Verify PiKVM official OS version
+  block:
+    - name: System Validate - Check and extract PiKVM OS version
+      ansible.builtin.shell:
+        cmd: set -o pipefail && pacman -Q | grep -oP 'kvmd-platform-(v[0-9]+|v4mini|v4plus)'
+      register: kvmd_platform_version_raw
+      changed_when: false
+      failed_when: kvmd_platform_version_raw.rc != 0
+
+    - name: System Validate - Set PiKVM OS version
+      ansible.builtin.set_fact:
+        pikvm_version_mapped: "{{ kvmd_platform_version_raw.stdout | regex_replace('^kvmd-platform-', '') }}"
+
+- name: System Validate - Validate Prometheus Metrics Endpoint
+  block:
+    # TODO update validate_certs check when certificates are enabled
+    # TODO update X-KVMD user and password on existing credentials
+    - name: System Validate - Check if Prometheus metrics endpoint is accessible
+      ansible.builtin.uri:
+        url: "https://{{ ansible_host }}/api/export/prometheus/metrics"
+        method: GET
+        status_code: 200
+        timeout: 10
+        headers:
+          X-KVMD-User: "admin"
+          X-KVMD-Passwd: "admin"
+        validate_certs: false
+      register: prometheus_check
+      failed_when: (prometheus_check.status != 200)
