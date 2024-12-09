@@ -10,3 +10,4 @@ hdmi_passthrough_enabled: false
 mouse_jiggler_enabled: false
 mouse_jiggler_on_after_reboot: false
 kvmd_override_enabled: false
+serial_over_usb_enabled: false

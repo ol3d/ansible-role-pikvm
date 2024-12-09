@@ -14,6 +14,10 @@
 - name: Manage web terminal
   ansible.builtin.import_tasks: web-terminal-config.yml
 
+- name: Configure serial-over-usb
+  ansible.builtin.import_tasks: serial-over-usb-config.yml
+  when: (pikvm_version_mapped in v2_incremental_list)
+
 - name: Configure EDID file
   ansible.builtin.import_tasks: edid-config.yml
   vars:

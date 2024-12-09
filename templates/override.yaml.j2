@@ -14,3 +14,9 @@ kvmd:
             active: true
 {% endif %}
 {% endif %}
+{% if serial_over_usb_enabled and pikvm_version in v2_incremental_list %}
+otg:
+    devices:
+        serial:
+            enabled: true
+{% endif %}

@@ -1,2 +1,7 @@
 ---
-# vars file ansible-role-pikvm
+pikvm_version_list: ['v0', 'v1', 'v2', 'v3', 'v4mini', 'v4plus']
+v0_incremental_list: ['v0', 'v1', 'v2', 'v3', 'v4mini', 'v4plus']
+v1_incremental_list: ['v1', 'v2', 'v3', 'v4mini', 'v4plus']
+v2_incremental_list: ['v2', 'v3', 'v4mini', 'v4plus']
+v3_incremental_list: ['v3', 'v4mini', 'v4plus']
+v4_incremental_list: ['v4mini', 'v4plus']
