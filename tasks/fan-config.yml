@@ -6,8 +6,8 @@
 
 - name: Fan Config - PiKVM fan configuration block
   when: >
-    (kvmd_fan_status.status.UnitFileState == 'disabled' and fan.enabled | bool) or
-    (kvmd_fan_status.status.UnitFileState == 'enabled' and not fan.enabled | bool)
+    (kvmd_fan_status.status.UnitFileState == 'disabled' and fan_enabled | bool) or
+    (kvmd_fan_status.status.UnitFileState == 'enabled' and not fan_enabled | bool)
   block:
     - name: Fan Config - Mount filesystem Read Write (rw)
       ansible.builtin.import_tasks: shared/filesystem-mode.yml
@@ -17,5 +17,5 @@
     - name: Fan Config - Manage kvmd-fan service
       ansible.builtin.systemd:
         name: kvmd-fan
-        enabled: "{{ fan.enabled }}"
+        enabled: "{{ fan_enabled }}"
       notify: Reboot PiKVM

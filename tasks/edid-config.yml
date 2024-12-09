@@ -9,11 +9,11 @@
     decoded_current_edid: "{{ current_edid.content | b64decode }}"
 
 - name: EDID Config - Set EDID to default value
-  when: (hdmi.edid.custom | default("") | length == 0)
+  when: (hdmi_edid is none)
   block:
     - name: EDID Config - Read the default EDID file
       ansible.builtin.slurp:
-        src: "/usr/share/kvmd/configs.default/kvmd/edid/{{ pikvm_version_mapped }}.hex"
+        src: "/usr/share/kvmd/configs.default/kvmd/edid/{{ pikvm_version }}.hex"
       register: default_edid
 
     - name: EDID Config - Set current EDID value to default
@@ -34,17 +34,17 @@
 
 - name: EDID Config - Set EDID to custom value
   when: >
-    (hdmi.edid.custom | default("") | length > 0)
-    and (hdmi.edid.custom != decoded_current_edid)
+    (hdmi_edid is not none)
+    and (hdmi_edid != decoded_current_edid)
   block:
     - name: EDID Config - Mount filesystem Read Write (rw)
       ansible.builtin.import_tasks: shared/filesystem-mode.yml
       vars:
         fs_mode: rw
 
-    - name: EDID Config - Override tc358743-edid hex file with custom EDID value if not the same
+    - name: EDID Config - Override tc358743-edid hex file with EDID value if not the same
       ansible.builtin.copy:
-        content: "{{ hdmi.edid.custom }}"
+        content: "{{ hdmi_edid }}"
         dest: /etc/kvmd/tc358743-edid.hex
         mode: "0640"
         force: true

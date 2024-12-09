@@ -1,0 +1,74 @@
+---
+- name: Check current state of ttyGS0 in /etc/securetty
+  ansible.builtin.slurp:
+    src: /etc/securetty
+  register: securetty
+  changed_when: false
+
+- name: Debug securetty contents
+  ansible.builtin.set_fact:
+    decoded_current_securetty: "{{ securetty.content | b64decode }}"
+
+- name: Check if ttyGS0 exists in the securetty contents
+  ansible.builtin.set_fact:
+    ttyGS0_present: "{{ 'ttyGS0' in decoded_current_securetty }}"
+
+- name: Check whether serial-over-usb needs to be configured
+  ansible.builtin.set_fact:
+    serial_over_usb_change_required: "{{
+        ('ttyGS0' in decoded_current_securetty and not serial_over_usb_enabled) or
+        (not 'ttyGS0' in decoded_current_securetty and serial_over_usb_enabled)
+      }}"
+
+- name: Configure serial-over-usb when enabled
+  when: ( serial_over_usb_change_required | bool )
+  notify: Reboot PiKVM
+  block:
+    - name: Serial-Over-USB Config - Mount filesystem Read Write (rw)
+      ansible.builtin.import_tasks: shared/filesystem-mode.yml
+      vars:
+        fs_mode: rw
+
+    - name: Ensure ttyGS0 is listed in /etc/securetty
+      ansible.builtin.lineinfile:
+        path: /etc/securetty
+        line: ttyGS0
+        state: "{{ 'present' if serial_over_usb_enabled else 'absent' }}"
+        mode: "0644"
+
+    - name: Ensure directory and override.conf are present
+      when: ( serial_over_usb_enabled | bool )
+      block:
+        - name: Create directory for systemd override
+          ansible.builtin.file:
+            path: /etc/systemd/system/getty@ttyGS0.service.d
+            state: directory
+            mode: "0755"
+
+        - name: Create systemd override configuration
+          ansible.builtin.copy:
+            dest: /etc/systemd/system/getty@ttyGS0.service.d/override.conf
+            content: |
+              [Service]
+              TTYReset=no
+              TTYVHangup=no
+              TTYVTDisallocate=no
+            mode: "0644"
+
+        - name: Enable getty@ttyGS0.service
+          ansible.builtin.systemd:
+            name: getty@ttyGS0.service
+            enabled: true
+
+    - name: Ensure directory and override.conf are absent
+      when: not ( serial_over_usb_enabled | bool )
+      block:
+        - name: Remove getty@ttyGS0.service.d override directory
+          ansible.builtin.file:
+            path: /etc/systemd/system/getty@ttyGS0.service.d
+            state: absent
+
+        - name: Disable getty@ttyGS0.service
+          ansible.builtin.systemd:
+            name: getty@ttyGS0.service
+            enabled: false

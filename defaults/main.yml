@@ -1,27 +1,13 @@
 ---
-oled:
-  enabled: false
-  rotate: false
-  fahrenheit: false
-fan:
-  enabled: true
-web_terminal:
-  enabled: true
+oled_enabled: false
+oled_rotate: false
+oled_fahrenheit: false
+fan_enabled: true
+web_terminal_enabled: true
 pikvm_os_update_output_logs: true
-hdmi:
-  edid:
-    custom: null
-  passthrough:
-    enabled: false
-validate:
-  validators:
-    system: true
-    prometheus: true
-  fail_on_validate: false
-hid:
-  mouse:
-    jiggler:
-      enabled: false
-      on_after_reboot: false
-kvmd_override:
-  enabled: false
+hdmi_edid: null
+hdmi_passthrough_enabled: false
+mouse_jiggler_enabled: false
+mouse_jiggler_on_after_reboot: false
+kvmd_override_enabled: false
+serial_over_usb_enabled: false
