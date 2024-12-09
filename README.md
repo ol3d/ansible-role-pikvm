@@ -49,6 +49,8 @@ The following PiKVM version(s) are currently unsupported and may not work with t
 
 `kvmd_override_enabled` By setting this value to **true**, the current override file within /etc/kvmd/override.yaml will be overwritten to match this roles config. By default this value is set to **false**.
 
+`serial_over_usb_enabled` By setting this value to **true**, the PiKVM will be configured to allow serial connections over USB. This can be used for terminal access from the managed server to the PiKVM, or for any other purpose that requires a serial connection. This is only available for PiKVM V2+.
+
 ### Example Variable Usage
 
 ```yaml
@@ -79,6 +81,7 @@ hdmi_passthrough_enabled: false
 mouse_jiggler_enabled: true
 mouse_jiggler_on_after_reboot: false
 kvmd_override_enabled: true
+serial_over_usb_enabled: false
 ```
 
 ## Example Playbook
